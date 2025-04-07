@@ -697,3 +697,9 @@ def main():
     window.close()
     print("[LOG] Application Closed.")
     exit(0)
+
+if __name__ == '__main__':
+    # You still need to replace PlaceholderObjectMonitorNet with your actual model class definition
+    # Ensure torch is installed: pip install torch
+    sg.theme('Material1')
+    main()
