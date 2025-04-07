@@ -310,3 +310,44 @@ def setup_pie_chart(window):
     fig_pie.tight_layout(pad=0.5)
     fig_agg_pie = draw_figure(canvas, fig_pie)
     update_pie_chart_display() # Initial empty draw
+
+def update_pie_chart_display():
+    """Redraws the pie chart based on current state_counts."""
+    global ax_pie, fig_agg_pie, state_counts
+    if not ax_pie or not fig_agg_pie: return
+
+    ax_pie.clear() # Clear previous pie
+    ax_pie.set_title('Predicted State Distribution', fontsize=8, fontweight='bold') # Title more general
+
+    if not state_counts:
+        ax_pie.text(0.5, 0.5, 'No data yet', horizontalalignment='center', verticalalignment='center', transform=ax_pie.transAxes)
+    else:
+        # Use CLASS_LABELS for ordering and ensuring all states can be shown
+        labels = CLASS_LABELS
+        sizes = [state_counts.get(label, 0) for label in labels] # Get counts, default to 0
+        # Filter out states with 0 counts to avoid cluttering the pie
+        labels_with_data = [l for l, s in zip(labels, sizes) if s > 0]
+        sizes_with_data = [s for s in sizes if s > 0]
+
+        if not sizes_with_data: # Handle case where counts exist but are all zero after filtering
+             ax_pie.text(0.5, 0.5, 'No data yet', horizontalalignment='center', verticalalignment='center', transform=ax_pie.transAxes)
+        else:
+            total = sum(sizes_with_data)
+            percentages = [(s / total) * 100 for s in sizes_with_data]
+
+            # Define consistent colors if possible, map to labels
+            color_map = {'Low': 'blue', 'Medium': 'green', 'Steady': '#99ff99', 'High': 'red', 'N/A': 'grey', 'Unknown': 'orange', 'Error':'black'}
+            colors = [color_map.get(label, 'grey') for label in labels_with_data]
+
+            explode = tuple([0.05] * len(labels_with_data)) # Slight separation for all shown slices
+
+            wedges, texts, autotexts = ax_pie.pie(percentages, explode=explode, labels=labels_with_data, colors=colors,
+                                                  autopct='%1.1f%%', startangle=90, shadow=False,
+                                                  textprops={'fontsize': 7, 'fontweight': 'bold'},
+                                                  pctdistance=0.85) # Adjust pct distance
+
+    ax_pie.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+    try:
+        fig_agg_pie.draw()
+    except Exception as e:
+        print(f"Error drawing pie chart: {e}")
