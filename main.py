@@ -529,3 +529,12 @@ def main():
     serial_thread = None
     plot_thread = None
     is_connected = False
+
+    # Main Event Loop
+    while True:
+        event, values = window.read(timeout=100)
+
+        if event == sg.WIN_CLOSED or event == 'Exit':
+            print("[LOG] Closing application...")
+            stop_event.set()
+            break
