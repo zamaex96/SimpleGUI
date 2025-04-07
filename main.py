@@ -540,7 +540,6 @@ def main():
 
         # --- Serial Connection Handling ---
         if event == '-CONNECT-':
-             # Connect logic remains the same, uses the global `predictor`
              # which is already configured for 5 inputs
             if not is_connected:
                 port = values['-COMBO-']
