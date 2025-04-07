@@ -117,7 +117,6 @@ data_queue = queue.Queue()
 
 # --- GUI Definition (make_window) ---
 def make_window(theme):
-    # ... (make_window code remains exactly the same as before) ...
     sg.theme(theme)
     menu_def = [['&Application', ['E&xit']],
                 ['&Help', ['&About']]]
@@ -572,7 +571,6 @@ def main():
             else: sg.popup("Already connected.", keep_on_top=True)
 
         elif event == '-DISCONNECT-':
-            # Disconnect logic remains the same
             if is_connected:
                 print("[LOG] Disconnecting...")
                 stop_event.set()
@@ -607,7 +605,6 @@ def main():
             update_pie_chart_display()
 
         elif event == '-SERIAL_CONNECTED-':
-            # Logic remains the same
             print("[LOG] Serial connection established.")
             sg.popup_quick_message("Serial Connected!", keep_on_top=True, background_color='green', text_color='white', auto_close_duration=2)
             window['-CONNECT-'].update(disabled=True); window['-DISCONNECT-'].update(disabled=False)
@@ -615,7 +612,6 @@ def main():
             is_connected = True
 
         elif event == '-SERIAL_DISCONNECTED-':
-            # Logic remains the same
              print("[LOG] Serial connection closed or failed.")
              window['-CONNECT-'].update(disabled=False); window['-DISCONNECT-'].update(disabled=True)
              window['-COMBO-'].update(disabled=False); window['-BAUD-'].update(disabled=False)
@@ -623,7 +619,6 @@ def main():
              is_connected = False
 
         elif event == '-SERIAL_ERROR-':
-            # Logic remains the same
             error_msg = values[event]
             print(f"[LOG] Serial Error: {error_msg}")
             sg.popup_error(f"Serial Connection Error:\n{error_msg}", keep_on_top=True)
@@ -631,7 +626,6 @@ def main():
 
         # --- Other GUI Events ---
         # About, Progress Bar, Graph, Folder/File, Edit Me, Versions, Theme Change
-        # logic all remain the same as in the previous PyTorch version.
         elif event == 'About':
             print("[LOG] Clicked About!")
             sg.popup('Aqua-Aware Demo',
