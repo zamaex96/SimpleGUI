@@ -538,3 +538,162 @@ def main():
             print("[LOG] Closing application...")
             stop_event.set()
             break
+
+        # --- Serial Connection Handling ---
+        if event == '-CONNECT-':
+             # Connect logic remains the same, uses the global `predictor`
+             # which is already configured for 5 inputs
+            if not is_connected:
+                port = values['-COMBO-']
+                try: baud = int(values['-BAUD-'])
+                except ValueError:
+                    sg.popup_error("Invalid Baud Rate.", keep_on_top=True); continue
+                if port == "N/A":
+                    sg.popup_error("No serial port selected.", keep_on_top=True); continue
+
+                print(f"[LOG] Attempting connect: {port} @ {baud} baud...")
+                stop_event.set()
+                if serial_thread and serial_thread.is_alive(): serial_thread.join(timeout=1)
+                if plot_thread and plot_thread.is_alive(): plot_thread.join(timeout=1)
+
+                time_data.clear(); acc_data.clear(); sp_data.clear()
+                state_counts.clear(); data_queue = queue.Queue()
+                update_live_plot_data(); update_pie_chart_display()
+
+                stop_event.clear()
+                serial_thread = threading.Thread(target=serial_reader,
+                                                 args=(window, port, baud, predictor, stop_event, data_queue),
+                                                 daemon=True)
+                plot_thread = threading.Thread(target=plot_updater,
+                                               args=(stop_event, data_queue),
+                                               daemon=True)
+                serial_thread.start()
+                plot_thread.start()
+            else: sg.popup("Already connected.", keep_on_top=True)
+
+        elif event == '-DISCONNECT-':
+            # Disconnect logic remains the same
+            if is_connected:
+                print("[LOG] Disconnecting...")
+                stop_event.set()
+            else: sg.popup("Not connected.", keep_on_top=True)
+
+        # --- Events from Serial Thread ---
+        elif event == '-SERIAL_DATA-':
+            # Update GUI, still only showing Acc/Sp by default
+            try:
+                # Access the data from the event payload
+                acc = values[event]['acc']
+                sp = values[event]['sp']
+                state = values[event]['state']
+                # Optionally access roll, pitch, yaw if needed for display
+                # roll = values[event]['roll']
+                # pitch = values[event]['pitch']
+                # yaw = values[event]['yaw']
+
+                window['-TEXT2-'].update(f"{acc:.2f}")
+                window['-TEXT3-'].update(f"{sp:.2f}")
+                window['-STATE-'].update(f"{state}")
+                # If you added fields for roll/pitch/yaw, update them here:
+                # window['-ROLL-'].update(f"{roll:.1f}")
+                # window['-PITCH-'].update(f"{pitch:.1f}")
+                # window['-YAW-'].update(f"{yaw:.1f}")
+            except KeyError as e:
+                 print(f"Error accessing data key in -SERIAL_DATA- event: {e}")
+            except Exception as e:
+                print(f"Error updating GUI with serial data: {e}")
+
+        elif event == '-UPDATE_PIE-':
+            update_pie_chart_display()
+
+        elif event == '-SERIAL_CONNECTED-':
+            # Logic remains the same
+            print("[LOG] Serial connection established.")
+            sg.popup_quick_message("Serial Connected!", keep_on_top=True, background_color='green', text_color='white', auto_close_duration=2)
+            window['-CONNECT-'].update(disabled=True); window['-DISCONNECT-'].update(disabled=False)
+            window['-COMBO-'].update(disabled=True); window['-BAUD-'].update(disabled=True)
+            is_connected = True
+
+        elif event == '-SERIAL_DISCONNECTED-':
+            # Logic remains the same
+             print("[LOG] Serial connection closed or failed.")
+             window['-CONNECT-'].update(disabled=False); window['-DISCONNECT-'].update(disabled=True)
+             window['-COMBO-'].update(disabled=False); window['-BAUD-'].update(disabled=False)
+             window['-TEXT2-'].update("0.0"); window['-TEXT3-'].update("0.0"); window['-STATE-'].update("N/A")
+             is_connected = False
+
+        elif event == '-SERIAL_ERROR-':
+            # Logic remains the same
+            error_msg = values[event]
+            print(f"[LOG] Serial Error: {error_msg}")
+            sg.popup_error(f"Serial Connection Error:\n{error_msg}", keep_on_top=True)
+            window.write_event_value('-SERIAL_DISCONNECTED-', True)
+
+        # --- Other GUI Events ---
+        # About, Progress Bar, Graph, Folder/File, Edit Me, Versions, Theme Change
+        # logic all remain the same as in the previous PyTorch version.
+        elif event == 'About':
+            print("[LOG] Clicked About!")
+            sg.popup('Aqua-Aware Demo',
+                     'Reads Serial Data (Acc, Sp, Roll, Pitch, Yaw)', # Updated text
+                     'Predicts State using PyTorch Model (5 features)', # Updated text
+                     'Displays Live Plot and State Pie Chart',
+                     '© AIoT Laboratory 2024', keep_on_top=True)
+
+        elif event == 'Test Progress bar':
+             progress_bar = window['-PROGRESS BAR-']
+             for i in range(100):
+                 window.read(timeout=10)
+                 progress_bar.update(current_count=i + 1)
+             print("[LOG] Progress bar complete!")
+
+        elif event == "-GRAPH-": # Static graph interaction
+            graph = window['-GRAPH-']
+            graph.draw_circle(values['-GRAPH-'], fill_color='yellow', radius=20)
+            print("[LOG] Circle drawn at: " + str(values['-GRAPH-']))
+
+        elif event == "Open Folder":
+            folder_or_file = sg.popup_get_folder('Choose your folder', keep_on_top=True)
+            sg.popup("You chose: " + str(folder_or_file), keep_on_top=True)
+            print("[LOG] User chose folder: " + str(folder_or_file))
+
+        elif event == "Open File":
+            folder_or_file = sg.popup_get_file('Choose your file', keep_on_top=True)
+            sg.popup("You chose: " + str(folder_or_file), keep_on_top=True)
+            print("[LOG] User chose file: " + str(folder_or_file))
+
+        elif event == 'Edit Me':
+            sg.execute_editor(__file__)
+        elif event == 'Versions':
+            sg.popup_scrolled(__file__, sg.get_versions(), keep_on_top=True, non_blocking=True)
+
+        elif event == "Set Theme":
+            print("[LOG] Clicked Set Theme!")
+            stop_event.set()
+            if serial_thread and serial_thread.is_alive(): serial_thread.join(timeout=1)
+            if plot_thread and plot_thread.is_alive(): plot_thread.join(timeout=1)
+            is_connected = False
+
+            theme_chosen = values['-THEME LISTBOX-'][0]
+            print("[LOG] User Chose Theme: " + str(theme_chosen))
+            window.close()
+
+            # Reset state for new window
+            stop_event = threading.Event()
+            data_queue = queue.Queue()
+            time_data.clear(); acc_data.clear(); sp_data.clear(); state_counts.clear()
+
+            window = make_window(theme_chosen)
+            setup_pie_chart(window)
+            setup_live_plot(window)
+            serial_thread = None; plot_thread = None
+
+    # --- Cleanup ---
+    print("[LOG] Waiting for threads to finish...")
+    stop_event.set()
+    if serial_thread and serial_thread.is_alive(): serial_thread.join(timeout=2)
+    if plot_thread and plot_thread.is_alive(): plot_thread.join(timeout=2)
+
+    window.close()
+    print("[LOG] Application Closed.")
+    exit(0)
