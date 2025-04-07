@@ -351,3 +351,111 @@ def update_pie_chart_display():
         fig_agg_pie.draw()
     except Exception as e:
         print(f"Error drawing pie chart: {e}")
+
+# --- Serial Communication and Processing Thread ---
+def serial_reader(window: 'sg.Window', port: str, baud: int, predictor_obj, stop_flag: threading.Event, data_q: queue.Queue):
+    """
+    Reads data from serial port (expects 5 features), performs ML prediction,
+    and updates GUI via events/queue.
+    """
+    print(f"Serial thread started for {port} at {baud} baud.")
+    ser = None
+    last_state = None
+    sample_count = 0
+    expected_keys = {'Acc', 'Sp', 'Roll', 'Pitch', 'Yaw'} # Set of expected keys
+
+    try:
+        ser = serial.Serial(port, baud, timeout=SERIAL_TIMEOUT)
+        time.sleep(2)
+        print(f"Serial port {port} opened successfully.")
+        window.write_event_value('-SERIAL_CONNECTED-', True)
+
+        while not stop_flag.is_set():
+            if ser.in_waiting > 0:
+                try:
+                    line = ser.readline().decode('utf-8', errors='ignore').strip()
+                    if not line: continue
+
+                    # --- Parsing Logic for 5 features ---
+                    # Example format: "Acc:0.2,Sp:3.1,Roll:1.5,Pitch:-0.8,Yaw:175.2"
+                    parsed_data = {}
+                    parts = line.split(',')
+                    valid_line = True
+                    for part in parts:
+                        if ':' in part:
+                            key, value_str = part.split(':', 1)
+                            key = key.strip()
+                            try:
+                                # Store all potential values as floats
+                                parsed_data[key] = float(value_str)
+                            except ValueError:
+                                # print(f"Warning: Could not parse value for {key} in '{part}'")
+                                valid_line = False # Mark line invalid if any part fails
+                                break # No need to parse further on this line
+                        else:
+                            # print(f"Warning: Invalid format part '{part}' in line '{line}'")
+                            valid_line = False
+                            break
+
+                    # --- Check if all expected keys were found and valid ---
+                    if valid_line and expected_keys.issubset(parsed_data.keys()):
+                        acc_val = parsed_data['Acc']
+                        sp_val = parsed_data['Sp']
+                        roll_val = parsed_data['Roll']
+                        pitch_val = parsed_data['Pitch']
+                        yaw_val = parsed_data['Yaw']
+
+                        # --- ML Prediction ---
+                        try:
+                            # Pass all 5 values to the predictor
+                            predicted_state = predictor_obj(acc_val, sp_val, roll_val, pitch_val, yaw_val) # <--- Pass all 5
+                        except Exception as pred_e:
+                            print(f"Error during prediction: {pred_e}")
+                            predicted_state = "Error"
+
+                        # --- Update State Counts ---
+                        valid_states_for_pie = CLASS_LABELS + ["Error", "Unknown"]
+                        if predicted_state in valid_states_for_pie:
+                            state_counts[predicted_state] += 1
+                            if predicted_state != last_state:
+                                window.write_event_value('-UPDATE_PIE-', True)
+                                last_state = predicted_state
+
+                        # --- Send full data to main thread ---
+                        data_payload = {
+                            'acc': acc_val, 'sp': sp_val, 'state': predicted_state,
+                            'roll': roll_val, 'pitch': pitch_val, 'yaw': yaw_val # Include others
+                        }
+                        window.write_event_value('-SERIAL_DATA-', data_payload) # <--- Send full payload
+
+                        # --- Put data onto queue for live plot (still just Acc/Sp for plot) ---
+                        sample_count += 1
+                        data_q.put({'time': sample_count, 'acc': acc_val, 'sp': sp_val})
+
+                    elif valid_line and not expected_keys.issubset(parsed_data.keys()):
+                        # print(f"Warning: Missing keys in line: '{line}'. Found: {parsed_data.keys()}")
+                        pass # Ignore line with missing keys
+                    else:
+                        # print(f"Warning: Invalid line format or parse error: '{line}'")
+                        pass # Ignore lines with parsing errors
+
+                except serial.SerialException as serial_e:
+                    print(f"Serial error: {serial_e}")
+                    stop_flag.set()
+                except UnicodeDecodeError as decode_e:
+                     print(f"Serial decode error: {decode_e}. Ignoring byte.")
+                except Exception as read_e:
+                    print(f"Error reading/processing serial line: {read_e}")
+            else:
+                time.sleep(0.01)
+
+    except serial.SerialException as e:
+        print(f"Error opening serial port {port}: {e}")
+        window.write_event_value('-SERIAL_ERROR-', str(e))
+    except Exception as e:
+        print(f"Unexpected error in serial thread: {e}")
+    finally:
+        if ser and ser.is_open: ser.close()
+        print(f"Serial port {port} closed.")
+        print("Serial thread finished.")
+        window.write_event_value('-SERIAL_DISCONNECTED-', True)
