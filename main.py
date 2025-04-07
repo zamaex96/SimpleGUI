@@ -68,3 +68,44 @@ def load_pytorch_model(model_path, model_definition_class, device='cpu'):
         print(f"Error loading PyTorch model: {e}")
         print("Ensure the PlaceholderObjectMonitorNet class is replaced with your actual model's Python class definition.")
         return None
+    
+# --- Load the Model ---
+# Replace PlaceholderObjectMonitorNet with the actual class name of your network
+model = load_pytorch_model(MODEL_PATH, PlaceholderObjectMonitorNet)
+
+# --- Fallback Predictor (adjust to accept 5 args, but maybe still use Acc mainly) ---
+class FallbackPredictor:
+    def __init__(self):
+         print("WARNING: PyTorch model failed to load. Using fallback predictor.")
+
+    def predict(self, acc_val, sp_val, roll_val, pitch_val, yaw_val): # <--- Accept all 5
+        # Simple logic, still based on acceleration for this placeholder
+        if acc_val < 0.1: return CLASS_LABELS[0]
+        elif acc_val < 0.5: return CLASS_LABELS[1]
+        elif acc_val < 1.5: return CLASS_LABELS[2]
+        else: return CLASS_LABELS[3]
+
+if model is None:
+    predictor = FallbackPredictor()
+else:
+    # Predictor function now takes 5 arguments
+    def predictor_func(acc_val, sp_val, roll_val, pitch_val, yaw_val): # <--- Accept all 5
+        model.eval()
+        with torch.no_grad():
+            # 1. Convert inputs to PyTorch Tensor (shape [1, 5])
+            input_data = [acc_val, sp_val, roll_val, pitch_val, yaw_val]
+            input_tensor = torch.tensor([input_data], dtype=torch.float32) # <--- Shape [1, 5]
+
+            # 2. Get model output (logits)
+            outputs = model(input_tensor)
+
+            # 3. Get predicted class index
+            predicted_index = torch.argmax(outputs, dim=1).item()
+
+            # 4. Map index to label
+            if 0 <= predicted_index < len(CLASS_LABELS):
+                return CLASS_LABELS[predicted_index]
+            else:
+                print(f"Warning: Predicted index {predicted_index} out of range.")
+                return "Unknown"
+    predictor = predictor_func # Use the function
