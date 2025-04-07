@@ -40,3 +40,31 @@ class PlaceholderObjectMonitorNet(nn.Module):
         x = self.relu(x)
         x = self.layer_2(x)
         return x
+    
+# --- !!! Function to Load PyTorch Model !!! ---
+def load_pytorch_model(model_path, model_definition_class, device='cpu'):
+    """Loads a PyTorch model state_dict."""
+    try:
+        # Instantiate the ACTUAL model architecture - Pass NUM_FEATURES
+        model = model_definition_class(input_size=NUM_FEATURES, num_classes=len(CLASS_LABELS)) # <--- Use NUM_FEATURES
+
+        state_dict = torch.load(model_path, map_location=torch.device(device), weights_only=True)
+
+        # Handle potential 'module.' prefix if saved with DataParallel
+        if isinstance(state_dict, nn.DataParallel):
+             state_dict = state_dict.module.state_dict()
+        elif isinstance(state_dict, dict) and all(key.startswith('module.') for key in state_dict):
+             state_dict = {k[len("module."):]: v for k, v in state_dict.items()}
+
+        model.load_state_dict(state_dict)
+        model.eval()
+        print(f"Successfully loaded PyTorch model from {model_path}")
+        return model.to(device)
+
+    except FileNotFoundError:
+        print(f"Error: Model file not found at {model_path}")
+        return None
+    except Exception as e:
+        print(f"Error loading PyTorch model: {e}")
+        print("Ensure the PlaceholderObjectMonitorNet class is replaced with your actual model's Python class definition.")
+        return None
