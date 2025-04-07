@@ -109,3 +109,8 @@ else:
                 print(f"Warning: Predicted index {predicted_index} out of range.")
                 return "Unknown"
     predictor = predictor_func # Use the function
+
+
+# --- Thread Control ---
+stop_event = threading.Event()
+data_queue = queue.Queue()
