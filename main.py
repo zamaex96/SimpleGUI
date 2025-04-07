@@ -233,3 +233,20 @@ def make_window(theme):
                        use_custom_titlebar=True, finalize=True, keep_on_top=False) # Keep_on_top=False usually better
     window.set_min_size(window.size)
     return window
+
+# --- Plotting Functions (draw_figure, setup_live_plot, etc.) ---
+# Global references for plot figures and axes to update them
+fig_agg_live = None
+fig_live = None
+ax_live = None
+acc_line = None
+sp_line = None
+# Use deque for efficient rolling data storage
+time_data = collections.deque(maxlen=MAX_PLOT_POINTS)
+acc_data = collections.deque(maxlen=MAX_PLOT_POINTS)
+sp_data = collections.deque(maxlen=MAX_PLOT_POINTS)
+
+fig_agg_pie = None
+fig_pie = None
+ax_pie = None
+state_counts = collections.Counter() # To store counts for pie chart
