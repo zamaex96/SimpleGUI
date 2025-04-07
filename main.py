@@ -256,3 +256,24 @@ def draw_figure(canvas, figure):
     figure_canvas_agg.draw()
     figure_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
     return figure_canvas_agg
+
+def setup_live_plot(window):
+    global fig_agg_live, fig_live, ax_live, acc_line, sp_line
+    canvas_elem = window['-ANIMATED_PLOT-']
+    canvas = canvas_elem.TKCanvas
+    plt.style.use('seaborn-v0_8-darkgrid') # Example style
+    plt.rcParams.update({'font.size': 7}) # Smaller font for plot
+
+    fig_live, ax_live = plt.subplots(figsize=(4, 2.5)) # Adjusted size
+    fig_live.patch.set_alpha(0) # Make figure background transparent if needed
+    ax_live.set_xlabel('Time (samples)', fontsize=7, fontweight='bold')
+    ax_live.set_ylabel('Value', fontsize=7, fontweight='bold')
+    ax_live.tick_params(axis='both', which='major', labelsize=6)
+
+    # Initialize empty plots
+    acc_line, = ax_live.plot([], [], 'r-', label='Acc (g)', linewidth=1.5)
+    sp_line, = ax_live.plot([], [], 'b-', label='Speed (m/s)', linewidth=1.5)
+    ax_live.legend(loc='upper left', fontsize=6)
+    ax_live.grid(True, linestyle='--', alpha=0.6)
+    fig_live.tight_layout(pad=0.5) # Adjust padding
+    fig_agg_live = draw_figure(canvas, fig_live)
