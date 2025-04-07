@@ -298,3 +298,15 @@ def update_live_plot_data():
         fig_agg_live.draw()
     except Exception as e:
         print(f"Error drawing live plot: {e}")
+
+def setup_pie_chart(window):
+    global fig_pie, ax_pie, fig_agg_pie
+    canvas_elem = window['-CANVAS-']
+    canvas = canvas_elem.TKCanvas
+    plt.style.use('seaborn-v0_8-pastel') # Different style for pie?
+    fig_pie, ax_pie = plt.subplots(figsize=(3.5, 2.5)) # Adjusted size
+    fig_pie.patch.set_alpha(0)
+    ax_pie.set_title('Acceleration State', fontsize=8, fontweight='bold')
+    fig_pie.tight_layout(pad=0.5)
+    fig_agg_pie = draw_figure(canvas, fig_pie)
+    update_pie_chart_display() # Initial empty draw
