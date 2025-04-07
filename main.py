@@ -186,3 +186,50 @@ def make_window(theme):
                                 key='-THEME LISTBOX-',
                                 enable_events=True)],
                     [sg.Button("Set Theme")]]
+    
+    # --- Load and Resize Logos ---
+    try:
+        logo_path = 'logo.png'
+        logo_image = Image.open(logo_path)
+        resized_logo = logo_image.resize((70, 50))
+        resized_logo_path = 'resized_logo.png'
+        resized_logo.save(resized_logo_path)
+
+        logo_path2 = 'logo2.png'
+        logo_image2 = Image.open(logo_path2)
+        resized_logo2 = logo_image2.resize((80, 60))
+        resized_logo_path2 = 'resized_logo2.png'
+        resized_logo2.save(resized_logo_path2)
+        img1 = sg.Image(filename=resized_logo_path2)
+        img2 = sg.Image(filename=resized_logo_path)
+    except FileNotFoundError:
+        print("Warning: Logo files not found. Skipping images.")
+        img1 = sg.Text('') # Placeholder if images fail
+        img2 = sg.Text('')
+    except Exception as e:
+        print(f"Error loading images: {e}")
+        img1 = sg.Text('')
+        img2 = sg.Text('')
+
+
+    layout = [[sg.MenubarCustom(menu_def, key='-MENU-', font='Courier 15', tearoff=True)],
+              [img1,
+               sg.Text('Aqua-Aware', size=(25, 1), justification='center', font=("Calibri", 16, 'underline'),
+                       relief=sg.RELIEF_RIDGE, k='-TEXT HEADING-', enable_events=True),
+               img2
+               ]
+              ]
+    layout += [[sg.TabGroup([[sg.Tab('Main', input_layout),
+                              #sg.Tab('Current Readings', current_layout), # Maybe remove? Main has live data now
+                              sg.Tab('Logging', logging_layout),
+                              sg.Tab('Import', popup_layout),
+                              sg.Tab('Theming', theme_layout),
+                              sg.Tab('Output Log', note_layout)]], key='-TAB GROUP-', expand_x=True, expand_y=True)]] # Renamed Note tab
+    layout[-1].append(sg.Sizegrip())
+
+    # Make sure finalize=True is set
+    window = sg.Window('AIoT Laboratory - Aqua-Aware', layout, right_click_menu=right_click_menu_def,
+                       right_click_menu_tearoff=True, grab_anywhere=True, resizable=True, margins=(0, 0),
+                       use_custom_titlebar=True, finalize=True, keep_on_top=False) # Keep_on_top=False usually better
+    window.set_min_size(window.size)
+    return window
