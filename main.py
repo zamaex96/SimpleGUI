@@ -517,3 +517,15 @@ def get_serial_ports():
         except (OSError, serial.SerialException):
             pass
     return result if result else ["N/A"]
+
+# --- Main Application (main) ---
+def main():
+    global predictor # Ensure predictor is accessible
+
+    window = make_window(sg.theme())
+    setup_pie_chart(window)
+    setup_live_plot(window)
+
+    serial_thread = None
+    plot_thread = None
+    is_connected = False
