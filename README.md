@@ -1,4 +1,6 @@
 # Aqua-Aware: Real-Time Serial Data Monitoring & ML Prediction System
+![Sample Application Window](gui.png "Sample GUI")
+
 
 ## Purpose of the Code
 
