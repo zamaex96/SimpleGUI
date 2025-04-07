@@ -459,3 +459,36 @@ def serial_reader(window: 'sg.Window', port: str, baud: int, predictor_obj, stop
         print(f"Serial port {port} closed.")
         print("Serial thread finished.")
         window.write_event_value('-SERIAL_DISCONNECTED-', True)
+
+# --- Plot Update Thread (plot_updater) ---
+# Remains the same (only uses acc, sp from queue)
+def plot_updater(stop_flag: threading.Event, data_q: queue.Queue):
+    """
+    Continuously reads data from the queue and updates the live plot.
+    """
+    print("Plot update thread started.")
+    while not stop_flag.is_set():
+        try:
+            new_data_available = False
+            while not data_q.empty():
+                try:
+                    data_point = data_q.get_nowait()
+                    time_data.append(data_point['time'])
+                    acc_data.append(data_point['acc'])
+                    sp_data.append(data_point['sp'])
+                    new_data_available = True
+                except queue.Empty:
+                    break
+                except KeyError:
+                    print("Warning: Invalid data format in plot queue")
+
+            if new_data_available:
+                update_live_plot_data() # Request redraw
+
+            time.sleep(PLOT_UPDATE_INTERVAL)
+
+        except Exception as e:
+            print(f"Error in plot update thread: {e}")
+            time.sleep(1)
+
+    print("Plot update thread finished.")
