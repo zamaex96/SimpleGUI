@@ -461,7 +461,7 @@ def serial_reader(window: 'sg.Window', port: str, baud: int, predictor_obj, stop
         window.write_event_value('-SERIAL_DISCONNECTED-', True)
 
 # --- Plot Update Thread (plot_updater) ---
-# Remains the same (only uses acc, sp from queue)
+# (only uses acc, sp from queue)
 def plot_updater(stop_flag: threading.Event, data_q: queue.Queue):
     """
     Continuously reads data from the queue and updates the live plot.
