@@ -114,3 +114,40 @@ else:
 # --- Thread Control ---
 stop_event = threading.Event()
 data_queue = queue.Queue()
+
+# --- GUI Definition (make_window) ---
+def make_window(theme):
+    # ... (make_window code remains exactly the same as before) ...
+    sg.theme(theme)
+    menu_def = [['&Application', ['E&xit']],
+                ['&Help', ['&About']]]
+    right_click_menu_def = [[], ['Edit Me', 'Versions', 'Exit']]
+    graph_right_click_menu_def = [[], ['Erase', 'Draw Line', 'Draw', ['Circle', 'Rectangle', 'Image'], 'Exit']]
+
+    # Table Data (can be updated later if needed)
+    data = [["Acc", 0.0], ["Sp", 0.0]]
+    headings = ["Name", "Score"]
+
+    input_layout = [
+        [sg.Text('Port', size=(5, 1)), sg.Combo(values=get_serial_ports(), default_value=get_serial_ports()[0] if get_serial_ports() else '', readonly=False, k='-COMBO-'),
+         sg.Text('Baud', size=(5,1)), sg.Input('9600', size=(8,1), k='-BAUD-'), # Added Baud Rate
+         sg.Button('Connect', k='-CONNECT-', button_color=('white', 'green')), # Added Connect Button
+         sg.Button('Disconnect', k='-DISCONNECT-', button_color=('white', 'red'), disabled=True) # Added Disconnect
+        ],
+        # Only displaying Acc and Sp for now
+        [sg.Checkbox('Acceleration', default=True, k='-ACC-', disabled=True), # Display only
+         sg.InputText('0.0', size=(7, 1), justification='center', k='-TEXT2-', readonly=True, tooltip='Live Acceleration Reading'),
+         sg.Checkbox('Speed', default=True, k='-SP-', disabled=True), # Display only
+         sg.InputText('0.0', size=(7, 1), justification='center', k='-TEXT3-', readonly=True, tooltip='Live Speed Reading')],
+        # You could add more Text/Input fields here for Roll, Pitch, Yaw if desired
+        # [sg.Text('Roll:', size=(5,1)), sg.InputText('0.0', size=(7, 1), k='-ROLL-', readonly=True), ...]
+        [sg.Text('Predicted State:', size=(12, 1)),
+         sg.Text('N/A', size=(15, 1), font=("Helvetica", 10, 'bold'), k='-STATE-', relief=sg.RELIEF_SUNKEN)], # Display for ML prediction
+        [sg.HorizontalSeparator()],
+        [sg.Text('Live Data Plot', font=("Helvetica", 10, 'bold'))],
+        [sg.Canvas(size=(300, 200), key='-ANIMATED_PLOT-')], # Adjusted size
+        [sg.HorizontalSeparator()],
+        [sg.Text('Acceleration State Distribution', font=("Helvetica", 10, 'bold'))],
+        [sg.Canvas(size=(300, 200), key='-CANVAS-')], # Adjusted size
+        [sg.Push(), sg.Text('© AIoT Laboratory', size=(15, 1), font=("Helvetica", 8))]
+    ]
