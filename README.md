@@ -1,5 +1,7 @@
 # Aqua-Aware: Real-Time Serial Data Monitoring & ML Prediction System
-![Sample Application Window](gui.png "Sample GUI")
+<p align="center">
+  <img src="gui.png" alt="Sample Application Window" title="Sample GUI">
+</p>
 
 
 ## Purpose of the Code
