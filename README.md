@@ -4,8 +4,6 @@
 </p>
 
 
-## Purpose of the Code
-
 This application, named "Aqua-Aware," is designed for real-time monitoring and analysis of sensor data with machine learning integration. The code implements a GUI-based system that:
 
 1. Connects to serial devices (like Arduino, ESP32, or custom sensors)
