@@ -151,3 +151,38 @@ def make_window(theme):
         [sg.Canvas(size=(300, 200), key='-CANVAS-')], # Adjusted size
         [sg.Push(), sg.Text('© AIoT Laboratory', size=(15, 1), font=("Helvetica", 8))]
     ]
+
+    current_layout = [[sg.T('Anything that you would use for aesthetics is in this tab!')],
+                      [sg.ProgressBar(100, orientation='h', size=(20, 20), key='-PROGRESS BAR-'),
+                       sg.Button('Test Progress bar')]]
+
+    note_layout = [[sg.Text("Output and errors will display here!")],
+                   [sg.Multiline(size=(60, 15), font='Courier 8', expand_x=True, expand_y=True, write_only=True,
+                                 reroute_stdout=True, reroute_stderr=True, echo_stdout_stderr=True, autoscroll=True,
+                                 auto_refresh=True, k='-MLOG-')]] # Added key
+
+    logging_layout = [[sg.Text("Anything you would use to graph will display here!")],
+                      [sg.Graph((200, 200), (0, 0), (200, 200), background_color="black", key='-GRAPH-',
+                                enable_events=True,
+                                right_click_menu=graph_right_click_menu_def)],
+                      [sg.T('Click anywhere on graph to draw a circle')],
+                      [sg.Table(values=data, headings=headings, max_col_width=25,
+                                background_color='lightgrey', text_color='black', # Adjusted colors
+                                auto_size_columns=True,
+                                display_row_numbers=True,
+                                justification='right',
+                                num_rows=2,
+                                alternating_row_color='white', # Adjusted colors
+                                key='-TABLE-',
+                                row_height=25)]]
+
+    popup_layout = [[sg.Text("Popup Testing")],
+                    [sg.Button("Open Folder")],
+                    [sg.Button("Open File")]]
+
+    theme_layout = [[sg.Text("See how elements look under different themes!")],
+                    [sg.Listbox(values=sg.theme_list(),
+                                size=(20, 12),
+                                key='-THEME LISTBOX-',
+                                enable_events=True)],
+                    [sg.Button("Set Theme")]]
