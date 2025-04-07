@@ -277,3 +277,24 @@ def setup_live_plot(window):
     ax_live.grid(True, linestyle='--', alpha=0.6)
     fig_live.tight_layout(pad=0.5) # Adjust padding
     fig_agg_live = draw_figure(canvas, fig_live)
+
+def update_live_plot_data():
+    """Updates the data of the existing live plot lines."""
+    if not ax_live or not fig_agg_live: return # Ensure plot is initialized
+
+    current_time = list(time_data)
+    current_acc = list(acc_data)
+    current_sp = list(sp_data)
+
+    acc_line.set_data(current_time, current_acc)
+    sp_line.set_data(current_time, current_sp)
+
+    # Adjust plot limits dynamically
+    ax_live.relim()
+    ax_live.autoscale_view(True,True,True)
+
+    # Redraw the canvas
+    try:
+        fig_agg_live.draw()
+    except Exception as e:
+        print(f"Error drawing live plot: {e}")
