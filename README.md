@@ -6,13 +6,13 @@
 
 This application, named "Aqua-Aware," is designed for real-time monitoring and analysis of sensor data with machine learning integration. The code implements a GUI-based system that:
 
-1. Connects to serial devices (like Arduino, ESP32, or custom sensors)
+1. Connects to serial devices (like Arduino, ESP32, STME32,  or custom sensors)
 2. Processes multi-parameter input data (acceleration, speed, roll, pitch, yaw)
 3. Applies machine learning predictions using a PyTorch model
 4. Visualizes data through real-time plots and state distribution charts
 5. Provides a user-friendly interface for monitoring and control
 
-The system is targeted for monitoring motion or movement in underwater environments, likely for Underwater Internet of Things (UIoT) applications.
+The system is targeted for monitoring motion or movement in underwater environments, likely for IoT or Underwater Internet of Things (UIoT) applications.
 
 ## Step-by-Step Implementation Process
 
